@@ -260,7 +260,7 @@ Pod::Spec.new do |s|
     end
 
     ss.subspec 'QMUIEmotionInputManager' do |sss|
-      sss.source_files = 'QMUIKit/QMUIComponents/QMUIEmotionInputManager.{h,m}'
+      sss.source_files = 'QMUIKit/QMUIComponents/QMUIEmotionInputManager.{h,m}', 'QMUIKit/QMUIComponents/QMUITextAttachment.{h,m}'
       sss.dependency 'QMUIKit/QMUIComponents/QMUIEmotionView'
     end
 
