@@ -6,8 +6,8 @@
 //  Copyright © 2021 pangchong. All rights reserved.
 //
 
-#import "MDTextAttachment.h"
+#import "QMUITextAttachment.h"
 
-@implementation MDTextAttachment
+@implementation QMUITextAttachment
 
 @end

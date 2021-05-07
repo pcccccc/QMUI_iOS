@@ -17,6 +17,7 @@
 #import "QMUICore.h"
 #import "NSString+QMUI.h"
 #import "QMUIEmotionView.h"
+#import "QMUITextAttachment.h"
 
 @protocol QMUIEmotionInputViewProtocol <UITextInput>
 
@@ -42,8 +43,9 @@
                 // 在输入框文字的中间插入表情
                 NSMutableAttributedString *mutableText =  inputText ? : [[NSMutableAttributedString alloc] initWithString:@""];
 //                [mutableText insertString:emotion.displayName atIndex:selectedRange.location];
-                NSTextAttachment *attach = [[NSTextAttachment alloc] init];
+                QMUITextAttachment *attach = [[QMUITextAttachment alloc] init];
                 attach.image = emotion.image;
+                attach.emojiName = emotion.displayName;
                 attach.bounds = CGRectMake(0, 0, 20, 20);
                 NSAttributedString *attachString = [NSAttributedString attributedStringWithAttachment:attach];
                 //将图片插入到合适的位置
@@ -54,8 +56,9 @@
                 // 在输入框文字的结尾插入表情
                 
                 NSMutableAttributedString *mutableText =  inputText ? : [[NSMutableAttributedString alloc] initWithString:@""];
-                NSTextAttachment *attach = [[NSTextAttachment alloc] init];
+                QMUITextAttachment *attach = [[QMUITextAttachment alloc] init];
                 attach.image = emotion.image;
+                attach.emojiName = emotion.displayName;
                 attach.bounds = CGRectMake(0, 0, 20, 20);
                 NSAttributedString *attachString = [NSAttributedString attributedStringWithAttachment:attach];
                 //将图片插入到合适的位置
