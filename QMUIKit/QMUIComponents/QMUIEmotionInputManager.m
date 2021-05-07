@@ -1,6 +1,6 @@
 /**
  * Tencent is pleased to support the open source community by making QMUI_iOS available.
- * Copyright (C) 2016-2021 THL A29 Limited, a Tencent company. All rights reserved.
+ * Copyright (C) 2016-2020 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
@@ -21,6 +21,7 @@
 @protocol QMUIEmotionInputViewProtocol <UITextInput>
 
 @property(nonatomic, copy) NSString *text;
+@property(nonatomic, copy) NSString *attributedText;
 @property(nonatomic, assign, readonly) NSRange selectedRange;
 @end
 
@@ -33,15 +34,22 @@
         __weak QMUIEmotionInputManager *weakSelf = self;
         self.emotionView.didSelectEmotionBlock = ^(NSInteger index, QMUIEmotion *emotion) {
             if (!weakSelf.boundInputView) return;
-            
-            NSString *inputText = weakSelf.boundInputView.text;
+           
+            NSMutableAttributedString *inputText = weakSelf.boundInputView.attributedText;
             // 用一个局部变量先保存selectedRangeForBoundTextInput的值，是为了避免在接下来这段代码执行的过程中，外部可能修改了self.selectedRangeForBoundTextInput的值，导致计算错误
             NSRange selectedRange = weakSelf.selectedRangeForBoundTextInput;
             if (selectedRange.location <= inputText.length) {
                 // 在输入框文字的中间插入表情
-                NSMutableString *mutableText = [NSMutableString stringWithString:inputText ?: @""];
-                [mutableText insertString:emotion.displayName atIndex:selectedRange.location];
-                weakSelf.boundInputView.text = mutableText;// UITextView setText:会触发textViewDidChangeSelection:，而如果在这个delegate里更新self.selectedRangeForBoundTextInput，就会导致计算错误
+                NSMutableAttributedString *mutableText = [[NSMutableAttributedString alloc] initWithString:inputText ? : @""];
+//                [mutableText insertString:emotion.displayName atIndex:selectedRange.location];
+                [mutableText addAttributes:@{NSForegroundColorAttributeName: weakSelf.boundTextView.textColor, NSFontAttributeName: weakSelf.boundTextView.font} range:NSMakeRange(0, mutableText.length)];
+                NSTextAttachment *attach = [[NSTextAttachment alloc] init];
+                attach.image = emotion.image;
+                attach.bounds = CGRectMake(0, 0, weakSelf.boundTextView.font.pointSize, weakSelf.boundTextView.font.pointSize);
+                NSAttributedString *attachString = [NSAttributedString attributedStringWithAttachment:attach];
+                //将图片插入到合适的位置
+                [mutableText insertAttributedString:attachString atIndex:selectedRange.location];
+                weakSelf.boundInputView.attributedText = mutableText;// UITextView setText:会触发textViewDidChangeSelection:，而如果在这个delegate里更新self.selectedRangeForBoundTextInput，就会导致计算错误
                 selectedRange = NSMakeRange(selectedRange.location + emotion.displayName.length, 0);
             } else {
                 // 在输入框文字的结尾插入表情
