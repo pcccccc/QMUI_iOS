@@ -51,7 +51,7 @@
                 //将图片插入到合适的位置
                 [mutableText insertAttributedString:attachString atIndex:selectedRange.location];
                 weakSelf.boundInputView.attributedText = mutableText;// UITextView setText:会触发textViewDidChangeSelection:，而如果在这个delegate里更新self.selectedRangeForBoundTextInput，就会导致计算错误
-                selectedRange = NSMakeRange(selectedRange.location + attachString.length.length, 0);
+                selectedRange = NSMakeRange(selectedRange.location + attachString.length, 0);
             } else {
                 // 在输入框文字的结尾插入表情
                 
