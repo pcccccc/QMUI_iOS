@@ -20,7 +20,6 @@
 #import "NSString+QMUI.h"
 #import "NSObject+QMUI.h"
 #import "UIViewController+QMUI.h"
-#import "UIGestureRecognizer+QMUI.h"
 #import "UIView+QMUI.h"
 
 @interface QMUIViewControllerHideKeyboardDelegateObject : NSObject <UIGestureRecognizerDelegate, QMUIKeyboardManagerDelegate>
@@ -309,29 +308,7 @@
     return self;
 }
 
-#pragma mark - <UIGestureRecognizerDelegate>
 
-- (BOOL)gestureRecognizerShouldBegin:(UIGestureRecognizer *)gestureRecognizer {
-    if (gestureRecognizer != self.viewController.hideKeyboardTapGestureRecognizer) {
-        return YES;
-    }
-    
-    if (![QMUIKeyboardManager isKeyboardVisible]) {
-        return NO;
-    }
-    
-    UIView *targetView = gestureRecognizer.qmui_targetView;
-    
-    // 点击了本身就是输入框的 view，就不要降下键盘了
-    if ([targetView isKindOfClass:[UITextField class]] || [targetView isKindOfClass:[UITextView class]]) {
-        return NO;
-    }
-    
-    if ([self.viewController shouldHideKeyboardWhenTouchInView:targetView]) {
-        [self.viewController.view endEditing:YES];
-    }
-    return NO;
-}
 
 #pragma mark - <QMUIKeyboardManagerDelegate>
 

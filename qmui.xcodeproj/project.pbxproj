@@ -272,8 +272,6 @@
 		CDD7C2C1212C528500D6FA1E /* QMUIPopupMenuView.h in Headers */ = {isa = PBXBuildFile; fileRef = CDD7C2BF212C528400D6FA1E /* QMUIPopupMenuView.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		CDE418FB20761A0F002ED021 /* UIBarItem+QMUI.h in Headers */ = {isa = PBXBuildFile; fileRef = CDE418F920761A0F002ED021 /* UIBarItem+QMUI.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		CDE418FC20761A0F002ED021 /* UIBarItem+QMUI.m in Sources */ = {isa = PBXBuildFile; fileRef = CDE418FA20761A0F002ED021 /* UIBarItem+QMUI.m */; };
-		CDEA6D081F4B07E700F627AF /* UIGestureRecognizer+QMUI.h in Headers */ = {isa = PBXBuildFile; fileRef = CDEA6D061F4B07E700F627AF /* UIGestureRecognizer+QMUI.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		CDEA6D0A1F4B07E700F627AF /* UIGestureRecognizer+QMUI.m in Sources */ = {isa = PBXBuildFile; fileRef = CDEA6D071F4B07E700F627AF /* UIGestureRecognizer+QMUI.m */; };
 		CDF2D69C207F7E3F009E04DD /* NSPointerArray+QMUI.h in Headers */ = {isa = PBXBuildFile; fileRef = CDF2D69A207F7E3F009E04DD /* NSPointerArray+QMUI.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		CDF2D69D207F7E3F009E04DD /* NSPointerArray+QMUI.m in Sources */ = {isa = PBXBuildFile; fileRef = CDF2D69B207F7E3F009E04DD /* NSPointerArray+QMUI.m */; };
 		CDFF5FB62369926300B63B92 /* Photos.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CDFF5FB52369926300B63B92 /* Photos.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
@@ -610,8 +608,6 @@
 		CDD7C2BF212C528400D6FA1E /* QMUIPopupMenuView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QMUIPopupMenuView.h; sourceTree = "<group>"; };
 		CDE418F920761A0F002ED021 /* UIBarItem+QMUI.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "UIBarItem+QMUI.h"; sourceTree = "<group>"; };
 		CDE418FA20761A0F002ED021 /* UIBarItem+QMUI.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "UIBarItem+QMUI.m"; sourceTree = "<group>"; };
-		CDEA6D061F4B07E700F627AF /* UIGestureRecognizer+QMUI.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "UIGestureRecognizer+QMUI.h"; sourceTree = "<group>"; };
-		CDEA6D071F4B07E700F627AF /* UIGestureRecognizer+QMUI.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "UIGestureRecognizer+QMUI.m"; sourceTree = "<group>"; };
 		CDF2D69A207F7E3F009E04DD /* NSPointerArray+QMUI.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSPointerArray+QMUI.h"; sourceTree = "<group>"; };
 		CDF2D69B207F7E3F009E04DD /* NSPointerArray+QMUI.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSPointerArray+QMUI.m"; sourceTree = "<group>"; };
 		CDFF5FB52369926300B63B92 /* Photos.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Photos.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk/System/Library/Frameworks/Photos.framework; sourceTree = DEVELOPER_DIR; };
@@ -933,8 +929,6 @@
 				CDB8CAA51DCC870700769DF0 /* UIControl+QMUI.m */,
 				CDB8CAA61DCC870700769DF0 /* UIFont+QMUI.h */,
 				CDB8CAA71DCC870700769DF0 /* UIFont+QMUI.m */,
-				CDEA6D061F4B07E700F627AF /* UIGestureRecognizer+QMUI.h */,
-				CDEA6D071F4B07E700F627AF /* UIGestureRecognizer+QMUI.m */,
 				CDB8CAA81DCC870700769DF0 /* UIImage+QMUI.h */,
 				CDB8CAA91DCC870700769DF0 /* UIImage+QMUI.m */,
 				CDB8CAAA1DCC870700769DF0 /* UIImageView+QMUI.h */,
@@ -1397,7 +1391,6 @@
 				CDC86FF71F68D617000E8829 /* QMUICommonViewController.h in Headers */,
 				CDC86FF81F68D617000E8829 /* QMUINavigationController.h in Headers */,
 				CDC86FF91F68D617000E8829 /* QMUITabBarViewController.h in Headers */,
-				CDEA6D081F4B07E700F627AF /* UIGestureRecognizer+QMUI.h in Headers */,
 				FE1FBCA91E8BA61300C6C01A /* UITextField+QMUI.h in Headers */,
 				CDB8CB611DCC870700769DF0 /* NSString+QMUI.h in Headers */,
 				CDB8CB9D1DCC870700769DF0 /* UIBezierPath+QMUI.h in Headers */,
@@ -1588,7 +1581,6 @@
 				CDB8CBD41DCC870800769DF0 /* UITabBarItem+QMUI.m in Sources */,
 				CD82C0B4206A82520046EED2 /* NSObject+QMUIMultipleDelegates.m in Sources */,
 				CDB8CBC01DCC870800769DF0 /* UILabel+QMUI.m in Sources */,
-				CDEA6D0A1F4B07E700F627AF /* UIGestureRecognizer+QMUI.m in Sources */,
 				CDB8CBB41DCC870800769DF0 /* UIFont+QMUI.m in Sources */,
 				CDB8CBD01DCC870800769DF0 /* UISearchBar+QMUI.m in Sources */,
 				CD84F31F1E52DBEA00546111 /* UITabBar+QMUI.m in Sources */,
