@@ -95,6 +95,20 @@
         }];
         [UIView animateWithDuration:.25 delay:.2 options:QMUIViewAnimationOptionsCurveOut animations:^{
             console.consoleWindow.alpha = 1;
+            
+            [[NSOperationQueue mainQueue] addOperationWithBlock:^{
+                NSEnumerator *frontToBackWindows = [UIApplication.sharedApplication.windows reverseObjectEnumerator];
+                for (UIWindow *window in frontToBackWindows) {
+                    BOOL windowOnMainScreen = window.screen == UIScreen.mainScreen;
+                    BOOL windowIsVisible = !window.hidden && window.alpha > 0;
+                    BOOL windowLevelNormal = window.windowLevel == UIWindowLevelNormal;
+                    if (windowOnMainScreen && windowIsVisible && windowLevelNormal) {
+                        [window addSubview:console.consoleWindow];
+                        break;
+                    }
+                }
+                
+            }];
         } completion:nil];
     }
 }

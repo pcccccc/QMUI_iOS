@@ -107,7 +107,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// 自动隐藏 toast 可以使用这个方法自动计算秒数
 + (NSTimeInterval)smartDelaySecondsForTipsText:(NSString *)text;
 
-+ (UIView *)getKeyWindow;
++ (UIWindow *)getKeyWindow;
 
 NS_ASSUME_NONNULL_END
 

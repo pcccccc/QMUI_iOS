@@ -317,7 +317,7 @@ const NSInteger QMUITipsAutomaticallyHideToastSeconds = -1;
     [self hideAllToastInView:nil animated:NO];
 }
 
-+ (UIView *)getKeyWindow {
++ (UIWindow *)getKeyWindow {
     
     UIWindow *window;
     if (@available(iOS 13.0, *)) {
@@ -332,6 +332,13 @@ const NSInteger QMUITipsAutomaticallyHideToastSeconds = -1;
                     break;
                 }
             }
+            
+            for (UIWindowScene* windowScene in [UIApplication sharedApplication].connectedScenes) {
+                
+                window = windowScene.windows.firstObject;
+                break;
+            }
+            
         }else {
             
             window = UIApplication.sharedApplication.delegate.window;

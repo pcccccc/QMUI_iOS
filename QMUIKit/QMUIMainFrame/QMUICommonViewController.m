@@ -193,7 +193,7 @@
 }
 
 - (BOOL)layoutEmptyView {
-    if (_emptyView) {
+    if (self.emptyView) {
         // 由于为self.emptyView设置frame时会调用到self.view，为了避免导致viewDidLoad提前触发，这里需要判断一下self.view是否已经被初始化
         BOOL viewDidLoad = self.emptyView.superview && [self isViewLoaded];
         if (viewDidLoad) {

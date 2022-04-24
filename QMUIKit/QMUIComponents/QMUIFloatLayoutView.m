@@ -69,7 +69,7 @@ const CGSize QMUIFloatLayoutViewAutomaticalMaximumItemSize = {-1, -1};
         
         CGRect itemViewFrame;
         CGSize itemViewSize = [itemView sizeThatFits:maximumItemSize];
-        itemViewSize.width = MIN(maximumItemSize.width, MAX(self.minimumItemSize.width, itemViewSize.width));
+        itemViewSize.width = MIN(maximumItemSize.width, MAX(self.minimumItemSize.width, itemViewSize.width)) + 20;
         itemViewSize.height = MIN(maximumItemSize.height, MAX(self.minimumItemSize.height, itemViewSize.height));
         
         BOOL shouldBreakline = i == 0 ? YES : ValueSwitchAlignLeftOrRight(itemViewOrigin.x + self.itemMargins.left + itemViewSize.width + self.padding.right > size.width,
