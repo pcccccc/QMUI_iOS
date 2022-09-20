@@ -118,3 +118,58 @@
 @property(nonatomic, assign) CGFloat pageControlMarginBottom UI_APPEARANCE_SELECTOR;
 
 @end
+
+@class QMUIEmotionPageView;
+
+@protocol QMUIEmotionPageViewDelegate <NSObject>
+
+@optional
+- (void)emotionPageView:(QMUIEmotionPageView *)emotionPageView didSelectEmotion:(QMUIEmotion *)emotion atIndex:(NSInteger)index;
+- (void)didSelectDeleteButtonInEmotionPageView:(QMUIEmotionPageView *)emotionPageView;
+
+@end
+
+/// 表情面板每一页的cell，在drawRect里将所有表情绘制上去，同时自带一个末尾的删除按钮
+@interface QMUIEmotionPageView : UICollectionViewCell
+
+@property(nonatomic, weak) QMUIEmotionView<QMUIEmotionPageViewDelegate> *delegate;
+
+/// 表情被点击时盖在表情上方用于表示选中的遮罩
+@property(nonatomic, strong) UIView *emotionSelectedBackgroundView;
+
+/// 表情面板右下角的删除按钮
+@property(nonatomic, strong) QMUIButton *deleteButton;
+
+/// 分配给当前pageView的所有表情
+@property(nonatomic, copy) NSArray<QMUIEmotion *> *emotions;
+
+/// 记录当前pageView里所有表情的可点击区域的rect，在drawRect:里更新，在tap事件里使用
+@property(nonatomic, strong) NSMutableArray<NSValue *> *emotionHittingRects;
+
+/// 负责实现表情的点击
+@property(nonatomic, strong) UITapGestureRecognizer *tapGestureRecognizer;
+
+/// 负责实现表情的长按
+@property(nonatomic, strong) UILongPressGestureRecognizer *longPressGestureRecognizer;
+
+/// 整个pageView内部的padding
+@property(nonatomic, assign) UIEdgeInsets padding;
+
+/// 每个pageView能展示表情的行数
+@property(nonatomic, assign) NSInteger numberOfRows;
+
+/// 每个表情的绘制区域大小，表情图片最终会以UIViewContentModeScaleAspectFit的方式撑满这个大小。表情计算布局时也是基于这个大小来算的。
+@property(nonatomic, assign) CGSize emotionSize;
+
+/// 点击表情时出现的遮罩要在表情所在的矩形位置拓展多少空间，负值表示遮罩比emotionSize更大，正值表示遮罩比emotionSize更小。最终判断表情点击区域时也是以拓展后的区域来判定的
+@property(nonatomic, assign) UIEdgeInsets emotionSelectedBackgroundExtension;
+
+/// 表情与表情之间的水平间距的最小值，实际值可能比这个要大一点（pageView会把剩余空间分配到表情的水平间距里）
+@property(nonatomic, assign) CGFloat minimumEmotionHorizontalSpacing;
+
+/// debug模式会把表情的绘制矩形显示出来
+@property(nonatomic, assign) BOOL debug;
+
+@property(nonatomic, strong) UIView *hintView;
+
+@end

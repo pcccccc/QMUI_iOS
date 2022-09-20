@@ -22,6 +22,7 @@
 #import "UIImage+QMUI.h"
 #import "QMUILog.h"
 #import "QMUILabel.h"
+#import "QMUIEmotionHeaderView.h"
 
 
 @implementation QMUIEmotion
@@ -39,60 +40,6 @@
 
 @end
 
-@class QMUIEmotionPageView;
-
-@protocol QMUIEmotionPageViewDelegate <NSObject>
-
-@optional
-- (void)emotionPageView:(QMUIEmotionPageView *)emotionPageView didSelectEmotion:(QMUIEmotion *)emotion atIndex:(NSInteger)index;
-- (void)didSelectDeleteButtonInEmotionPageView:(QMUIEmotionPageView *)emotionPageView;
-
-@end
-
-/// 表情面板每一页的cell，在drawRect里将所有表情绘制上去，同时自带一个末尾的删除按钮
-@interface QMUIEmotionPageView : UICollectionViewCell
-
-@property(nonatomic, weak) QMUIEmotionView<QMUIEmotionPageViewDelegate> *delegate;
-
-/// 表情被点击时盖在表情上方用于表示选中的遮罩
-@property(nonatomic, strong) UIView *emotionSelectedBackgroundView;
-
-/// 表情面板右下角的删除按钮
-@property(nonatomic, strong) QMUIButton *deleteButton;
-
-/// 分配给当前pageView的所有表情
-@property(nonatomic, copy) NSArray<QMUIEmotion *> *emotions;
-
-/// 记录当前pageView里所有表情的可点击区域的rect，在drawRect:里更新，在tap事件里使用
-@property(nonatomic, strong) NSMutableArray<NSValue *> *emotionHittingRects;
-
-/// 负责实现表情的点击
-@property(nonatomic, strong) UITapGestureRecognizer *tapGestureRecognizer;
-
-/// 负责实现表情的长按
-@property(nonatomic, strong) UILongPressGestureRecognizer *longPressGestureRecognizer;
-
-/// 整个pageView内部的padding
-@property(nonatomic, assign) UIEdgeInsets padding;
-
-/// 每个pageView能展示表情的行数
-@property(nonatomic, assign) NSInteger numberOfRows;
-
-/// 每个表情的绘制区域大小，表情图片最终会以UIViewContentModeScaleAspectFit的方式撑满这个大小。表情计算布局时也是基于这个大小来算的。
-@property(nonatomic, assign) CGSize emotionSize;
-
-/// 点击表情时出现的遮罩要在表情所在的矩形位置拓展多少空间，负值表示遮罩比emotionSize更大，正值表示遮罩比emotionSize更小。最终判断表情点击区域时也是以拓展后的区域来判定的
-@property(nonatomic, assign) UIEdgeInsets emotionSelectedBackgroundExtension;
-
-/// 表情与表情之间的水平间距的最小值，实际值可能比这个要大一点（pageView会把剩余空间分配到表情的水平间距里）
-@property(nonatomic, assign) CGFloat minimumEmotionHorizontalSpacing;
-
-/// debug模式会把表情的绘制矩形显示出来
-@property(nonatomic, assign) BOOL debug;
-
-@property(nonatomic, strong) UIView *hintView;
-
-@end
 
 @implementation QMUIEmotionPageView
 
@@ -140,7 +87,7 @@
     CGSize contentSize = CGRectInsetEdges(self.bounds, self.padding).size;
     NSInteger emotionCountPerRow = (contentSize.width + self.minimumEmotionHorizontalSpacing) / (self.emotionSize.width + self.minimumEmotionHorizontalSpacing);
     CGFloat emotionHorizontalSpacing = flat((contentSize.width - emotionCountPerRow * self.emotionSize.width) / (emotionCountPerRow - 1));
-    CGFloat emotionVerticalSpacing = flat((contentSize.height - self.numberOfRows * self.emotionSize.height) / (self.numberOfRows - 1));
+    CGFloat emotionVerticalSpacing = emotionHorizontalSpacing;
     
     CGPoint emotionOrigin = CGPointZero;
     for (NSInteger i = 0, l = self.emotions.count; i < l; i++) {
@@ -338,7 +285,7 @@
     self.pagedEmotions = [[NSMutableArray alloc] init];
     
     _collectionViewLayout = [[UICollectionViewFlowLayout alloc] init];
-    self.collectionViewLayout.scrollDirection = UICollectionViewScrollDirectionHorizontal;
+//    self.collectionViewLayout.scrollDirection = UICollectionViewScrollDirectionHorizontal;
     self.collectionViewLayout.minimumLineSpacing = 0;
     self.collectionViewLayout.minimumInteritemSpacing = 0;
     self.collectionViewLayout.sectionInset = UIEdgeInsetsZero;
@@ -346,11 +293,12 @@
     _collectionView = [[UICollectionView alloc] initWithFrame:CGRectMake(self.qmui_safeAreaInsets.left, self.qmui_safeAreaInsets.top, CGRectGetWidth(frame) - UIEdgeInsetsGetHorizontalValue(self.qmui_safeAreaInsets), CGRectGetHeight(frame) - UIEdgeInsetsGetVerticalValue(self.qmui_safeAreaInsets)) collectionViewLayout:self.collectionViewLayout];
     self.collectionView.backgroundColor = UIColorClear;
     self.collectionView.scrollsToTop = NO;
-    self.collectionView.pagingEnabled = YES;
+//    self.collectionView.pagingEnabled = YES;
     self.collectionView.showsHorizontalScrollIndicator = NO;
     self.collectionView.dataSource = self;
     self.collectionView.delegate = self;
     [self.collectionView registerClass:[QMUIEmotionPageView class] forCellWithReuseIdentifier:@"page"];
+    [self.collectionView registerClass:[QMUIEmotionHeaderView class] forSupplementaryViewOfKind:UICollectionElementKindSectionHeader withReuseIdentifier:@"header"];
     [self addSubview:self.collectionView];
     
     _pageControl = [[UIPageControl alloc] init];
@@ -373,20 +321,24 @@
     [super layoutSubviews];
     CGRect collectionViewFrame = CGRectInsetEdges(self.bounds, self.qmui_safeAreaInsets);
     BOOL collectionViewSizeChanged = !CGSizeEqualToSize(collectionViewFrame.size, self.collectionView.bounds.size);
-    self.collectionViewLayout.itemSize = collectionViewFrame.size;// 先更新 itemSize 再设置 collectionView.frame，否则会触发系统的 UICollectionViewFlowLayoutBreakForInvalidSizes 断点
+    CGFloat contentWidthInPage = CGRectGetWidth(self.collectionView.bounds) - UIEdgeInsetsGetHorizontalValue(self.paddingInPage);
+    NSInteger maximumEmotionCountPerRowInPage = (contentWidthInPage + self.minimumEmotionHorizontalSpacing) / (self.emotionSize.width + self.minimumEmotionHorizontalSpacing);
+    NSInteger maximumEmotionCountPerPage = maximumEmotionCountPerRowInPage * self.numberOfRowsPerPage - 1;//
+    NSInteger pageCount = ceil((CGFloat)self.emotions.count / (CGFloat)maximumEmotionCountPerPage);
+    self.collectionViewLayout.itemSize = CGSizeMake(collectionViewFrame.size.width, collectionViewFrame.size.height * pageCount);// 先更新 itemSize 再设置 collectionView.frame，否则会触发系统的 UICollectionViewFlowLayoutBreakForInvalidSizes 断点
     self.collectionView.frame = collectionViewFrame;
     
     if (collectionViewSizeChanged) {
         [self pageEmotions];
     }
     
-    self.sendButton.qmui_right = self.qmui_width - self.qmui_safeAreaInsets.right - self.sendButtonMargins.right;
-    self.sendButton.qmui_bottom = self.qmui_height - self.qmui_safeAreaInsets.bottom - self.sendButtonMargins.bottom;
+//    self.sendButton.qmui_right = self.qmui_width - self.qmui_safeAreaInsets.right - self.sendButtonMargins.right;
+//    self.sendButton.qmui_bottom = self.qmui_height - self.qmui_safeAreaInsets.bottom - self.sendButtonMargins.bottom;
     
     CGFloat pageControlHeight = 16;
     CGFloat pageControlMaxX = self.sendButton.qmui_left;
     CGFloat pageControlMinX = self.qmui_width - pageControlMaxX;
-    self.pageControl.frame = CGRectMake(pageControlMinX, self.qmui_height - self.qmui_safeAreaInsets.bottom - self.pageControlMarginBottom - pageControlHeight, pageControlMaxX - pageControlMinX, pageControlHeight);
+    self.pageControl.frame = CGRectZero;
 }
 
 - (void)pageEmotions {
@@ -395,7 +347,8 @@
     
     if (!CGRectIsEmpty(self.collectionView.bounds) && self.emotions.count && !CGSizeIsEmpty(self.emotionSize)) {
         CGFloat contentWidthInPage = CGRectGetWidth(self.collectionView.bounds) - UIEdgeInsetsGetHorizontalValue(self.paddingInPage);
-        NSInteger maximumEmotionCountPerRowInPage = (contentWidthInPage + self.minimumEmotionHorizontalSpacing) / (self.emotionSize.width + self.minimumEmotionHorizontalSpacing);
+        NSInteger maximumEmotionCountPerRowInPage = self.emotions.count;
+//        (contentWidthInPage + self.minimumEmotionHorizontalSpacing) / (self.emotionSize.width + self.minimumEmotionHorizontalSpacing);
         NSInteger maximumEmotionCountPerPage = maximumEmotionCountPerRowInPage * self.numberOfRowsPerPage - 1;// 删除按钮占一个表情位置
         NSInteger pageCount = ceil((CGFloat)self.emotions.count / (CGFloat)maximumEmotionCountPerPage);
         for (NSInteger i = 0; i < pageCount; i ++) {
@@ -457,6 +410,50 @@
     return pageView;
 }
 
+- (CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout*)collectionViewLayout referenceSizeForHeaderInSection:(NSInteger)section {
+    
+    if ([[NSUserDefaults standardUserDefaults] objectForKey:@"QMUI_USED_EMOTION"] == nil || [[[NSUserDefaults standardUserDefaults] objectForKey:@"QMUI_USED_EMOTION"] count] == 0) {
+        
+        return CGSizeMake(UIScreen.mainScreen.bounds.size.width, 0);
+    }else {
+     
+        return CGSizeMake(UIScreen.mainScreen.bounds.size.width, 90);
+    }
+}
+
+
+- (UICollectionReusableView *)collectionView:(UICollectionView *)collectionView viewForSupplementaryElementOfKind:(NSString *)kind atIndexPath:(NSIndexPath *)indexPath {
+    if ([kind isEqualToString:UICollectionElementKindSectionHeader]) {
+        QMUIEmotionHeaderView *headerView = [collectionView dequeueReusableSupplementaryViewOfKind:kind withReuseIdentifier:@"header" forIndexPath:indexPath];
+        NSMutableArray *emtions = [[NSMutableArray alloc] init];
+        if ([[NSUserDefaults standardUserDefaults] objectForKey:@"QMUI_USED_EMOTION"]) {
+            
+            for (int i = 0; i < [[[NSUserDefaults standardUserDefaults] objectForKey:@"QMUI_USED_EMOTION"] count]; i++) {
+                
+                NSDictionary *emotionDict = [[NSUserDefaults standardUserDefaults] objectForKey:@"QMUI_USED_EMOTION"][i];
+                QMUIEmotion *emotion = [QMUIEmotion emotionWithIdentifier:emotionDict[@"identifier"] displayName:emotionDict[@"displayName"]];
+                for (QMUIEmotion *theEmotion in self.emotions) {
+                    if ([theEmotion.identifier isEqualToString:emotion.identifier]) {
+                        
+                        emotion.image = theEmotion.image;
+                    }
+                }
+                [emtions addObject:emotion];
+            }
+            headerView.emotionPageView.delegate = self;
+            headerView.emotionPageView.emotions = emtions;
+            headerView.emotionPageView.padding = self.paddingInPage;
+            headerView.emotionPageView.numberOfRows = self.numberOfRowsPerPage;
+            headerView.emotionPageView.emotionSize = self.emotionSize;
+            headerView.emotionPageView.minimumEmotionHorizontalSpacing = self.minimumEmotionHorizontalSpacing;
+
+        }
+        return headerView;
+    }
+    return  nil;
+}
+
+
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
     if (scrollView == self.collectionView) {
         NSInteger currentPage = round(scrollView.contentOffset.x / CGRectGetWidth(scrollView.bounds));
@@ -471,6 +468,24 @@
         NSInteger index = [self.emotions indexOfObject:emotion];
         self.didSelectEmotionBlock(index, emotion);
     }
+    
+    NSMutableArray *emotions = [[[NSUserDefaults standardUserDefaults] objectForKey:@"QMUI_USED_EMOTION"] mutableCopy];
+    if (emotions == nil) {
+        emotions = [NSMutableArray array];
+    }
+    BOOL hasFlag = NO;
+    for (int i = 0; i < emotions.count; i++) {
+        NSDictionary *emotionsDict = emotions[i];
+        if ([emotionsDict[@"identifier"] isEqualToString:emotion.identifier]) {
+            hasFlag = YES;
+            break;
+        }
+    }
+    if (hasFlag == NO) {
+        
+        [emotions insertObject:@{@"identifier": emotion.identifier, @"displayName": emotion.displayName} atIndex:0];
+    }
+    [[NSUserDefaults standardUserDefaults] setObject:[emotions copy] forKey:@"QMUI_USED_EMOTION"];
 }
 
 - (void)didSelectDeleteButtonInEmotionPageView:(QMUIEmotionPageView *)emotionPageView {

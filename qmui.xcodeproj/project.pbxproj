@@ -312,6 +312,8 @@
 		D0F0C7C2246A926600927A1A /* QMUICommonDefinesTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D0F0C7C1246A926600927A1A /* QMUICommonDefinesTests.m */; };
 		D0FB669821CBF00F00806600 /* UIInterface+QMUI.h in Headers */ = {isa = PBXBuildFile; fileRef = D0FB669621CBF00F00806600 /* UIInterface+QMUI.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		D0FB669921CBF00F00806600 /* UIInterface+QMUI.m in Sources */ = {isa = PBXBuildFile; fileRef = D0FB669721CBF00F00806600 /* UIInterface+QMUI.m */; };
+		FB611B2228D95F4C00CA8579 /* QMUIEmotionHeaderView.m in Sources */ = {isa = PBXBuildFile; fileRef = FB611B2028D95F4B00CA8579 /* QMUIEmotionHeaderView.m */; };
+		FB611B2328D95F4C00CA8579 /* QMUIEmotionHeaderView.h in Headers */ = {isa = PBXBuildFile; fileRef = FB611B2128D95F4B00CA8579 /* QMUIEmotionHeaderView.h */; };
 		FE1FBCA91E8BA61300C6C01A /* UITextField+QMUI.h in Headers */ = {isa = PBXBuildFile; fileRef = FE1FBCA71E8BA61300C6C01A /* UITextField+QMUI.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		FE1FBCAA1E8BA61300C6C01A /* UITextField+QMUI.m in Sources */ = {isa = PBXBuildFile; fileRef = FE1FBCA81E8BA61300C6C01A /* UITextField+QMUI.m */; };
 		FE1FBCAF1E8BA79000C6C01A /* UITextView+QMUI.h in Headers */ = {isa = PBXBuildFile; fileRef = FE1FBCAD1E8BA79000C6C01A /* UITextView+QMUI.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -652,6 +654,8 @@
 		D0F0C7C1246A926600927A1A /* QMUICommonDefinesTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = QMUICommonDefinesTests.m; sourceTree = "<group>"; };
 		D0FB669621CBF00F00806600 /* UIInterface+QMUI.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "UIInterface+QMUI.h"; sourceTree = "<group>"; };
 		D0FB669721CBF00F00806600 /* UIInterface+QMUI.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "UIInterface+QMUI.m"; sourceTree = "<group>"; };
+		FB611B2028D95F4B00CA8579 /* QMUIEmotionHeaderView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = QMUIEmotionHeaderView.m; sourceTree = "<group>"; };
+		FB611B2128D95F4B00CA8579 /* QMUIEmotionHeaderView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QMUIEmotionHeaderView.h; sourceTree = "<group>"; };
 		FE0AFAD11D82B9D8000D21D9 /* QMUIKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = QMUIKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		FE1FBCA71E8BA61300C6C01A /* UITextField+QMUI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UITextField+QMUI.h"; sourceTree = "<group>"; };
 		FE1FBCA81E8BA61300C6C01A /* UITextField+QMUI.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UITextField+QMUI.m"; sourceTree = "<group>"; };
@@ -1037,6 +1041,8 @@
 				CDC86F821F68D5F9000E8829 /* QMUIEmotionInputManager.m */,
 				CDC86F611F68D5F9000E8829 /* QMUIEmotionView.h */,
 				CDC86F621F68D5F9000E8829 /* QMUIEmotionView.m */,
+				FB611B2128D95F4B00CA8579 /* QMUIEmotionHeaderView.h */,
+				FB611B2028D95F4B00CA8579 /* QMUIEmotionHeaderView.m */,
 				CDC86F631F68D5F9000E8829 /* QMUIEmptyView.h */,
 				CDC86F641F68D5F9000E8829 /* QMUIEmptyView.m */,
 				CDC86F651F68D5F9000E8829 /* QMUIFloatLayoutView.h */,
@@ -1429,6 +1435,7 @@
 				CDC86FC51F68D617000E8829 /* UINavigationBar+Transition.h in Headers */,
 				CDB8CACF1DCC870700769DF0 /* QMUIKit.h in Headers */,
 				CD9F48AA22C3985200F5C5C2 /* QMUIThemePrivate.h in Headers */,
+				FB611B2328D95F4C00CA8579 /* QMUIEmotionHeaderView.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1583,6 +1590,7 @@
 				CDD7C2C0212C528500D6FA1E /* QMUIPopupMenuView.m in Sources */,
 				CD18CDFF20EE167200EED53C /* UITableViewCell+QMUI.m in Sources */,
 				CDB8CBE41DCC870800769DF0 /* UIWindow+QMUI.m in Sources */,
+				FB611B2228D95F4C00CA8579 /* QMUIEmotionHeaderView.m in Sources */,
 				CD43CB18207B98A10090346B /* QMUIButton.m in Sources */,
 				CDD7C2BD212C510B00D6FA1E /* QMUIPopupMenuButtonItem.m in Sources */,
 				CD0A1BAB273512D5002A1A54 /* QMUIStringPrivate.m in Sources */,
