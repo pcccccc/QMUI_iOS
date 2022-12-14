@@ -180,7 +180,7 @@ Pod::Spec.new do |s|
     end
 
     ss.subspec 'QMUIEmotionView' do |sss|
-      sss.source_files = 'QMUIKit/QMUIComponents/QMUIEmotionView.{h,m}'
+      sss.source_files = 'QMUIKit/QMUIComponents/QMUIEmotionView.{h,m}', 'QMUIKit/QMUIComponents/QMUIEmotionHeaderView.{h,m}'
       sss.dependency 'QMUIKit/QMUIResources'
       sss.dependency 'QMUIKit/QMUIComponents/QMUIButton'
     end
