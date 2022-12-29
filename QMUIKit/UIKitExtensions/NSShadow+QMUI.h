@@ -5,29 +5,22 @@
  * http://opensource.org/licenses/MIT
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
  */
-
 //
-//  UITabBar+QMUI.h
-//  qmui
+//  NSShadow+QMUI.h
+//  QMUIKit
 //
-//  Created by QMUI Team on 2017/2/14.
+//  Created by molice on 2022/9/6.
 //
 
 #import <UIKit/UIKit.h>
-#import "QMUIBarProtocol.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 130000
+@interface NSShadow (QMUI)
 
-UIKIT_EXTERN API_AVAILABLE(ios(13.0), tvos(13.0)) @interface UITabBarAppearance (QMUI)
-
-/**
- 同时设置 stackedLayoutAppearance、inlineLayoutAppearance、compactInlineLayoutAppearance 三个状态下的 itemAppearance
- */
-- (void)qmui_applyItemAppearanceWithBlock:(void (^)(UITabBarItemAppearance *itemAppearance))block;
++ (instancetype)qmui_shadowWithColor:(nullable UIColor *)shadowColor
+                        shadowOffset:(CGSize)shadowOffset
+                        shadowRadius:(CGFloat)shadowRadius;
 @end
-
-#endif
 
 NS_ASSUME_NONNULL_END

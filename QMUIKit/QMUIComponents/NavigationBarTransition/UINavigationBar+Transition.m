@@ -16,6 +16,7 @@
 #import "UINavigationBar+Transition.h"
 #import "QMUICore.h"
 #import "UINavigationBar+QMUI.h"
+#import "UINavigationBar+QMUIBarProtocol.h"
 #import "QMUIWeakObjectContainer.h"
 #import "UIImage+QMUI.h"
 
@@ -53,16 +54,52 @@
             }
         });
         
-        ExtendImplementationOfVoidMethodWithTwoArguments([UINavigationBar class], @selector(setBackgroundImage:forBarMetrics:), UIImage *, UIBarMetrics, ^(UINavigationBar *selfObject, UIImage *backgroundImage, UIBarMetrics barMetrics) {
-            if (selfObject.qmuinb_copyStylesToBar) {
-                [selfObject.qmuinb_copyStylesToBar setBackgroundImage:backgroundImage forBarMetrics:barMetrics];
-            }
+        OverrideImplementation([UINavigationBar class], @selector(setBackgroundImage:forBarMetrics:), ^id(__unsafe_unretained Class originClass, SEL originCMD, IMP (^originalIMPProvider)(void)) {
+            return ^(UINavigationBar *selfObject, UIImage *image, UIBarMetrics barMetrics) {
+                
+                // call super
+                void (*originSelectorIMP)(id, SEL, UIImage *, UIBarMetrics);
+                originSelectorIMP = (void (*)(id, SEL, UIImage *, UIBarMetrics))originalIMPProvider();
+                originSelectorIMP(selfObject, originCMD, image, barMetrics);
+                
+                if (selfObject.qmuinb_copyStylesToBar) {
+                    [selfObject.qmuinb_copyStylesToBar setBackgroundImage:image forBarMetrics:barMetrics];
+                }
+            };
         });
         
         ExtendImplementationOfVoidMethodWithSingleArgument([UINavigationBar class], @selector(setShadowImage:), UIImage *, ^(UINavigationBar *selfObject, UIImage *firstArgv) {
             if (selfObject.qmuinb_copyStylesToBar) {
                 selfObject.qmuinb_copyStylesToBar.shadowImage = firstArgv;
             }
+        });
+        
+        OverrideImplementation([UINavigationBar class], @selector(setQmui_effect:), ^id(__unsafe_unretained Class originClass, SEL originCMD, IMP (^originalIMPProvider)(void)) {
+            return ^(UINavigationBar *selfObject, UIBlurEffect *firstArgv) {
+                
+                // call super
+                void (*originSelectorIMP)(id, SEL, UIBlurEffect *);
+                originSelectorIMP = (void (*)(id, SEL, UIBlurEffect *))originalIMPProvider();
+                originSelectorIMP(selfObject, originCMD, firstArgv);
+                
+                if (selfObject.qmuinb_copyStylesToBar) {
+                    selfObject.qmuinb_copyStylesToBar.qmui_effect = firstArgv;
+                }
+            };
+        });
+        
+        OverrideImplementation([UINavigationBar class], @selector(setQmui_effectForegroundColor:), ^id(__unsafe_unretained Class originClass, SEL originCMD, IMP (^originalIMPProvider)(void)) {
+            return ^(UINavigationBar *selfObject, UIColor *firstArgv) {
+                
+                // call super
+                void (*originSelectorIMP)(id, SEL, UIColor *);
+                originSelectorIMP = (void (*)(id, SEL, UIColor *))originalIMPProvider();
+                originSelectorIMP(selfObject, originCMD, firstArgv);
+                
+                if (selfObject.qmuinb_copyStylesToBar) {
+                    selfObject.qmuinb_copyStylesToBar.qmui_effectForegroundColor = firstArgv;
+                }
+            };
         });
     });
 }
@@ -105,9 +142,13 @@ static char kAssociatedObjectKey_copyStylesToBar;
         if (![copyStylesToBar.barTintColor isEqual:self.barTintColor]) {
             copyStylesToBar.barTintColor = self.barTintColor;
         }
+        
 #ifdef IOS15_SDK_ALLOWED
     }
 #endif
+    
+    copyStylesToBar.qmui_effect = self.qmui_effect;
+    copyStylesToBar.qmui_effectForegroundColor = self.qmui_effectForegroundColor;
 }
 
 - (UINavigationBar *)qmuinb_copyStylesToBar {
@@ -124,6 +165,7 @@ static char kAssociatedObjectKey_copyStylesToBar;
         // iOS 14 开启 customNavigationBarTransitionKey 的情况下转场效果错误
         // https://github.com/Tencent/QMUI_iOS/issues/1081
         if (@available(iOS 14.0, *)) {
+            // - [UINavigationBar _accessibility_navigationController]
             OverrideImplementation([_QMUITransitionNavigationBar class], NSSelectorFromString([NSString stringWithFormat:@"_%@_%@", @"accessibility", @"navigationController"]), ^id(__unsafe_unretained Class originClass, SEL originCMD, IMP (^originalIMPProvider)(void)) {
                 return ^UINavigationController *(_QMUITransitionNavigationBar *selfObject) {
                     if (selfObject.originalNavigationBar) {
@@ -143,7 +185,7 @@ static char kAssociatedObjectKey_copyStylesToBar;
         
 #ifdef IOS15_SDK_ALLOWED
         if (@available(iOS 15.0, *)) {
-            // -[UINavigationBar _didMoveFromWindow:toWindow:]
+            // - [UINavigationBar _didMoveFromWindow:toWindow:]
             OverrideImplementation([_QMUITransitionNavigationBar class], NSSelectorFromString(@"_didMoveFromWindow:toWindow:"), ^id(__unsafe_unretained Class originClass, SEL originCMD, IMP (^originalIMPProvider)(void)) {
                 return ^(_QMUITransitionNavigationBar *selfObject, UIWindow *firstArgv, UIWindow *secondArgv) {
                     

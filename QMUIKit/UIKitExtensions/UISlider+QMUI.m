@@ -18,6 +18,8 @@
 #import "UIImage+QMUI.h"
 #import "UIView+QMUI.h"
 #import "UILabel+QMUI.h"
+#import "CALayer+QMUI.h"
+#import "NSShadow+QMUI.h"
 
 @interface UISlider ()
 
@@ -31,6 +33,7 @@
 QMUISynthesizeIdStrongProperty(qmuisl_stepControls, setQmuisl_stepControls)
 QMUISynthesizeIdCopyProperty(qmuisl_layoutCachedKey, setQmuisl_layoutCachedKey)
 QMUISynthesizeNSUIntegerProperty(qmuisl_precedingStep, setQmuisl_precedingStep)
+QMUISynthesizeIdCopyProperty(qmui_stepDidChangeBlock, setQmui_stepDidChangeBlock)
 
 - (UIView *)qmui_thumbView {
     // thumbView 并非在一开始就存在，而是在某个时机才生成的。如果使用了自己的 thumbImage，则系统用 _thumbView 来显示。如果没用自己的 thumbImage，则系统用 _innerThumbView 来存放。注意如果是 _innerThumbView，它外部还有一个 _thumbViewNeue 用来控制布局。
@@ -105,14 +108,14 @@ static char kAssociatedObjectKey_thumbColor;
     }
 }
 
-static char kAssociatedObjectKey_thumbShadowColor;
-- (void)setQmui_thumbShadowColor:(UIColor *)qmui_thumbShadowColor {
-    objc_setAssociatedObject(self, &kAssociatedObjectKey_thumbShadowColor, qmui_thumbShadowColor, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-    if (qmui_thumbShadowColor) {
+static char kAssociatedObjectKey_thumbShadow;
+- (void)setQmui_thumbShadow:(NSShadow *)thumbShadow {
+    objc_setAssociatedObject(self, &kAssociatedObjectKey_thumbShadow, thumbShadow, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    if (thumbShadow) {
         [QMUIHelper executeBlock:^{
             if (@available(iOS 14.0, *)) {
                 // -[_UISlideriOSVisualElement didAddSubview:]
-                OverrideImplementation(NSClassFromString(@"_UISlideriOSVisualElement"), @selector(didAddSubview:), ^id(__unsafe_unretained Class originClass, SEL originCMD, IMP (^originalIMPProvider)(void)) {
+                OverrideImplementation(NSClassFromString([NSString qmui_stringByConcat:@"_", @"UISlider", @"iOS", @"VisualElement", nil]), @selector(didAddSubview:), ^id(__unsafe_unretained Class originClass, SEL originCMD, IMP (^originalIMPProvider)(void)) {
                     return ^(UIView *selfObject, UIView *subview) {
                         
                         // call super
@@ -124,10 +127,7 @@ static char kAssociatedObjectKey_thumbShadowColor;
                         if (![slider isKindOfClass:UISlider.class]) return;
                         UIView *tv = slider.qmui_thumbView;
                         if (tv) {
-                            tv.layer.shadowColor = slider.qmui_thumbShadowColor.CGColor;
-                            tv.layer.shadowOpacity = slider.qmui_thumbShadowColor ? 1 : 0;
-                            tv.layer.shadowOffset = slider.qmui_thumbShadowOffset;
-                            tv.layer.shadowRadius = slider.qmui_thumbShadowRadius;
+                            tv.layer.qmui_shadow = slider.qmui_thumbShadow;
                         }
                     };
                 });
@@ -142,51 +142,21 @@ static char kAssociatedObjectKey_thumbShadowColor;
                         
                         UIView *tv = selfObject.qmui_thumbView;
                         if (tv) {
-                            tv.layer.shadowColor = selfObject.qmui_thumbShadowColor.CGColor;
-                            tv.layer.shadowOpacity = selfObject.qmui_thumbShadowColor ? 1 : 0;
-                            tv.layer.shadowOffset = selfObject.qmui_thumbShadowOffset;
-                            tv.layer.shadowRadius = selfObject.qmui_thumbShadowRadius;
+                            tv.layer.qmui_shadow = selfObject.qmui_thumbShadow;
                         }
                     };
                 });
             }
-        } oncePerIdentifier:@"UISlider (QMUI) thumbShadowColor"];
+        } oncePerIdentifier:@"UISlider (QMUI) thumbShadow"];
     }
     UIView *thumbView = self.qmui_thumbView;
     if (thumbView) {
-        thumbView.layer.shadowColor = qmui_thumbShadowColor.CGColor;
-        thumbView.layer.shadowOpacity = qmui_thumbShadowColor ? 1 : 0;
+        thumbView.layer.qmui_shadow = thumbShadow;
     }
 }
 
-- (UIColor *)qmui_thumbShadowColor {
-    return (UIColor *)objc_getAssociatedObject(self, &kAssociatedObjectKey_thumbShadowColor);
-}
-
-static char kAssociatedObjectKey_thumbShadowOffset;
-- (void)setQmui_thumbShadowOffset:(CGSize)qmui_thumbShadowOffset {
-    objc_setAssociatedObject(self, &kAssociatedObjectKey_thumbShadowOffset, @(qmui_thumbShadowOffset), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-    UIView *thumbView = self.qmui_thumbView;
-    if (thumbView) {
-        thumbView.layer.shadowOffset = qmui_thumbShadowOffset;
-    }
-}
-
-- (CGSize)qmui_thumbShadowOffset {
-    return [((NSNumber *)objc_getAssociatedObject(self, &kAssociatedObjectKey_thumbShadowOffset)) CGSizeValue];
-}
-
-static char kAssociatedObjectKey_thumbShadowRadius;
-- (void)setQmui_thumbShadowRadius:(CGFloat)qmui_thumbShadowRadius {
-    objc_setAssociatedObject(self, &kAssociatedObjectKey_thumbShadowRadius, @(qmui_thumbShadowRadius), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-    UIView *thumbView = self.qmui_thumbView;
-    if (thumbView) {
-        thumbView.layer.shadowRadius = qmui_thumbShadowRadius;
-    }
-}
-
-- (CGFloat)qmui_thumbShadowRadius {
-    return [((NSNumber *)objc_getAssociatedObject(self, &kAssociatedObjectKey_thumbShadowRadius)) qmui_CGFloatValue];
+- (NSShadow *)qmui_thumbShadow {
+    return (NSShadow *)objc_getAssociatedObject(self, &kAssociatedObjectKey_thumbShadow);
 }
 
 #pragma mark - Steps
@@ -199,6 +169,7 @@ static char kAssociatedObjectKey_numberOfSteps;
             [obj removeFromSuperview];
         }];
         self.qmuisl_stepControls = nil;
+        [self removeTarget:self action:@selector(qmuisl_handleValueChanged:) forControlEvents:UIControlEventValueChanged];
         return;
     }
     
@@ -231,6 +202,9 @@ static char kAssociatedObjectKey_numberOfSteps;
         }];
     }
     [self qmuisl_setNeedsLayout];
+    
+    [self removeTarget:self action:@selector(qmuisl_handleValueChanged:) forControlEvents:UIControlEventValueChanged];
+    [self addTarget:self action:@selector(qmuisl_handleValueChanged:) forControlEvents:UIControlEventValueChanged];
 }
 
 - (NSUInteger)qmui_numberOfSteps {
@@ -264,25 +238,16 @@ static char kAssociatedObjectKey_stepControlConfiguration;
     return (void (^)(UISlider * _Nonnull, QMUISliderStepControl * _Nonnull, NSUInteger))objc_getAssociatedObject(self, &kAssociatedObjectKey_stepControlConfiguration);
 }
 
-static char kAssociatedObjectKey_stepDidChangeBlock;
-- (void)setQmui_stepDidChangeBlock:(void (^)(__kindof UISlider * _Nonnull, NSUInteger))stepDidChangeBlock {
-    objc_setAssociatedObject(self, &kAssociatedObjectKey_stepDidChangeBlock, stepDidChangeBlock, OBJC_ASSOCIATION_COPY_NONATOMIC);
-    [self removeTarget:self action:@selector(qmuisl_handleValueChanged:) forControlEvents:UIControlEventValueChanged];
-    if (stepDidChangeBlock) {
-        [self addTarget:self action:@selector(qmuisl_handleValueChanged:) forControlEvents:UIControlEventValueChanged];
-    }
-}
-
-- (void (^)(__kindof UISlider * _Nonnull, NSUInteger))qmui_stepDidChangeBlock {
-    return (void (^)(__kindof UISlider * _Nonnull, NSUInteger))objc_getAssociatedObject(self, &kAssociatedObjectKey_stepDidChangeBlock);
-}
-
 - (void)qmuisl_handleValueChanged:(UISlider *)slider {
-    if (!slider.qmui_stepDidChangeBlock || slider.qmui_numberOfSteps < 2) return;
+    if (slider.qmui_numberOfSteps < 2) return;
     
     NSUInteger step = [slider qmuisl_stepWithValue:slider.value];
     if (step != slider.qmuisl_precedingStep) {
-        slider.qmui_stepDidChangeBlock(slider, slider.qmuisl_precedingStep);
+        if (slider.qmui_stepDidChangeBlock) {
+            slider.qmui_stepDidChangeBlock(slider, slider.qmuisl_precedingStep);
+        }
+        // 即便不存在 qmui_stepDidChangeBlock 也要记录 precedingStep
+        // https://github.com/Tencent/QMUI_iOS/issues/1413
         slider.qmuisl_precedingStep = step;
     }
 }

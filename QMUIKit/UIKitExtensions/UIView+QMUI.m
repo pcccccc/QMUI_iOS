@@ -33,8 +33,16 @@ QMUISynthesizeIdCopyProperty(qmui_frameDidChangeBlock, setQmui_frameDidChangeBlo
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         
-        ExtendImplementationOfVoidMethodWithSingleArgument([UIView class], @selector(setTintColor:), UIColor *, ^(UIView *selfObject, UIColor *tintColor) {
-            selfObject.qmui_tintColorCustomized = !!tintColor;
+        OverrideImplementation([UIView class], @selector(setTintColor:), ^id(__unsafe_unretained Class originClass, SEL originCMD, IMP (^originalIMPProvider)(void)) {
+            return ^(UIView *selfObject, UIColor *tintColor) {
+                
+                // call super
+                void (*originSelectorIMP)(id, SEL, UIColor *);
+                originSelectorIMP = (void (*)(id, SEL, UIColor *))originalIMPProvider();
+                originSelectorIMP(selfObject, originCMD, tintColor);
+                
+                selfObject.qmui_tintColorCustomized = !!tintColor;
+            };
         });
         
         // 这个私有方法在 view 被调用 becomeFirstResponder 并且处于 window 上时，才会被调用，所以比 becomeFirstResponder 更适合用来检测
@@ -80,7 +88,10 @@ static char kAssociatedObjectKey_outsideEdge;
             OverrideImplementation([UIView class], @selector(pointInside:withEvent:), ^id(__unsafe_unretained Class originClass, SEL originCMD, IMP (^originalIMPProvider)(void)) {
                 return ^BOOL(UIControl *selfObject, CGPoint point, UIEvent *event) {
                     
-                    if (!UIEdgeInsetsEqualToEdgeInsets(selfObject.qmui_outsideEdge, UIEdgeInsetsZero)) {
+                    if (!UIEdgeInsetsEqualToEdgeInsets(selfObject.qmui_outsideEdge, UIEdgeInsetsZero)
+                        && selfObject.alpha > 0.01
+                        && !selfObject.hidden
+                        && !CGRectIsEmpty(selfObject.frame)) {
                         CGRect rect = UIEdgeInsetsInsetRect(selfObject.bounds, selfObject.qmui_outsideEdge);
                         BOOL result = CGRectContainsPoint(rect, point);
                         return result;
@@ -99,7 +110,7 @@ static char kAssociatedObjectKey_outsideEdge;
             [QMUIHelper executeBlock:^{
                 if (@available(iOS 14.0, *)) {
                     // -[_UISlideriOSVisualElement thumbHitEdgeInsets]
-                    OverrideImplementation(NSClassFromString(@"_UISlideriOSVisualElement"), NSSelectorFromString(@"thumbHitEdgeInsets"), ^id(__unsafe_unretained Class originClass, SEL originCMD, IMP (^originalIMPProvider)(void)) {
+                    OverrideImplementation(NSClassFromString([NSString qmui_stringByConcat:@"_", @"UISlider", @"iOS", @"VisualElement", nil]), NSSelectorFromString(@"thumbHitEdgeInsets"), ^id(__unsafe_unretained Class originClass, SEL originCMD, IMP (^originalIMPProvider)(void)) {
                         return ^UIEdgeInsets(UIView *selfObject) {
                             // call super
                             UIEdgeInsets (*originSelectorIMP)(id, SEL);
@@ -157,7 +168,7 @@ static char kAssociatedObjectKey_tintColorDidChangeBlock;
 }
 
 static char kAssociatedObjectKey_hitTestBlock;
-- (void)setQmui_hitTestBlock:(__kindof UIView * _Nonnull (^)(CGPoint, UIEvent * _Nonnull, __kindof UIView * _Nonnull))qmui_hitTestBlock {
+- (void)setQmui_hitTestBlock:(__kindof UIView * _Nullable (^)(CGPoint, UIEvent * _Nullable, __kindof UIView * _Nullable))qmui_hitTestBlock {
     objc_setAssociatedObject(self, &kAssociatedObjectKey_hitTestBlock, qmui_hitTestBlock, OBJC_ASSOCIATION_COPY_NONATOMIC);
     [QMUIHelper executeBlock:^{
         ExtendImplementationOfNonVoidMethodWithTwoArguments([UIView class], @selector(hitTest:withEvent:), CGPoint, UIEvent *, UIView *, ^UIView *(UIView *selfObject, CGPoint point, UIEvent *event, UIView *originReturnValue) {
@@ -724,11 +735,19 @@ static char kAssociatedObjectKey_sizeThatFitsBlock;
     // Extend 每个实例对象的类是为了保证比子类的 sizeThatFits 逻辑要更晚调用
     Class viewClass = self.class;
     [QMUIHelper executeBlock:^{
-        ExtendImplementationOfNonVoidMethodWithSingleArgument(viewClass, @selector(sizeThatFits:), CGSize, CGSize, ^CGSize(UIView *selfObject, CGSize firstArgv, CGSize originReturnValue) {
-            if (selfObject.qmui_sizeThatFitsBlock && [selfObject isMemberOfClass:viewClass]) {
-                originReturnValue = selfObject.qmui_sizeThatFitsBlock(selfObject, firstArgv, originReturnValue);
-            }
-            return originReturnValue;
+        OverrideImplementation(viewClass, @selector(sizeThatFits:), ^id(__unsafe_unretained Class originClass, SEL originCMD, IMP (^originalIMPProvider)(void)) {
+            return ^CGSize(UIView *selfObject, CGSize firstArgv) {
+                
+                // call super
+                CGSize (*originSelectorIMP)(id, SEL, CGSize);
+                originSelectorIMP = (CGSize (*)(id, SEL, CGSize))originalIMPProvider();
+                CGSize result = originSelectorIMP(selfObject, originCMD, firstArgv);
+                
+                if (selfObject.qmui_sizeThatFitsBlock && [selfObject isMemberOfClass:viewClass]) {
+                    result = selfObject.qmui_sizeThatFitsBlock(selfObject, firstArgv, result);
+                }
+                return result;
+            };
         });
     } oncePerIdentifier:[NSString stringWithFormat:@"UIView %@-%@", NSStringFromClass(viewClass), NSStringFromSelector(@selector(sizeThatFits:))]];
 }
