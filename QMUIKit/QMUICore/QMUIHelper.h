@@ -255,6 +255,7 @@ extern const CGPoint QMUIBadgeInvalidateOffset;
  */
 @property(class, nonatomic, assign, readonly) BOOL canUpdateAppearance;
 
+
 @end
 
 @interface QMUIHelper (Animation)

@@ -54,4 +54,27 @@ QMUISynthesizeBOOLProperty(qmui_capturesStatusBarAppearance, setQmui_capturesSta
     });
 }
 
+- (UIWindow *)qmui_keyWindow {
+    UIWindow *window;
+    if (@available(iOS 13.0, *)) {
+        if ([UIApplication sharedApplication].connectedScenes) {
+            for (UIWindowScene* windowScene in [UIApplication sharedApplication].connectedScenes) {
+                if (windowScene.activationState == UISceneActivationStateForegroundActive) {
+                    window = windowScene.windows.firstObject;
+                    break;
+                }
+            }
+            for (UIWindowScene* windowScene in [UIApplication sharedApplication].connectedScenes) {
+                window = windowScene.windows.firstObject;
+                break;
+            }
+        }else {
+            window = UIApplication.sharedApplication.delegate.window;
+        }
+    } else {
+        window = UIApplication.sharedApplication.delegate.window;
+    }
+    return window;
+}
+
 @end

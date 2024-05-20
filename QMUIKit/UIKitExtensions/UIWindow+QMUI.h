@@ -28,4 +28,8 @@
  @warning 如果你自己创建的 window 不满足以上2点，那么就算 qmui_capturesStatusBarAppearance 为 YES，也无法得到 statusBar 的控制权。
  */
 @property(nonatomic, assign) BOOL qmui_capturesStatusBarAppearance;
+
+@property(nonatomic, strong, class) UIWindow *qmui_keyWindow;
+
+
 @end
