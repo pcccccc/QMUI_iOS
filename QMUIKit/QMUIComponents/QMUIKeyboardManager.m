@@ -19,6 +19,7 @@
 #import "QMUIAppearance.h"
 #import "QMUIMultipleDelegates.h"
 #import "NSArray+QMUI.h"
+#import "UIView+QMUI.h"
 
 @class QMUIKeyboardViewFrameObserver;
 @protocol QMUIKeyboardViewFrameObserverDelegate <NSObject>
@@ -230,14 +231,12 @@ static char kAssociatedObjectKey_KeyboardViewFrameObserver;
         CGRect beginFrame = [[self.originUserInfo objectForKey:UIKeyboardFrameBeginUserInfoKey] CGRectValue];
         CGRect endFrame = [[self.originUserInfo objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
         
-        if (@available(iOS 13.0, *)) {
-            // iOS 13 分屏键盘 x 不是 0，不知道是系统 BUG 还是故意这样，先这样保护，再观察一下后面的 beta 版本
-            if (IS_SPLIT_SCREEN_IPAD && beginFrame.origin.x > 0) {
-                beginFrame.origin.x = 0;
-            }
-            if (IS_SPLIT_SCREEN_IPAD && endFrame.origin.x > 0) {
-                endFrame.origin.x = 0;
-            }
+        // iOS 13 分屏键盘 x 不是 0，不知道是系统 BUG 还是故意这样，先这样保护，再观察一下后面的 beta 版本
+        if (IS_SPLIT_SCREEN_IPAD && beginFrame.origin.x > 0) {
+            beginFrame.origin.x = 0;
+        }
+        if (IS_SPLIT_SCREEN_IPAD && endFrame.origin.x > 0) {
+            endFrame.origin.x = 0;
         }
         
         _beginFrame = beginFrame;
@@ -937,7 +936,10 @@ static char kAssociatedObjectKey_KeyboardViewFrameObserver;
 
 + (CGFloat)visibleKeyboardHeight {
     UIView *keyboardView = [self keyboardView];
-    UIWindow *keyboardWindow = keyboardView.window;
+    // iPad“侧拉”模式打开的 App，App Window 和键盘 Window 尺寸不同，如果以键盘 Window 为准则会认为键盘一直在屏幕上，从而出现误判，所以这里改为用 App Window。
+    // iPhone、iPad 全屏/分屏/台前调度，都没这个问题
+//    UIWindow *keyboardWindow = keyboardView.window;
+    UIWindow *keyboardWindow = UIApplication.sharedApplication.delegate.window;
     if (!keyboardView || !keyboardWindow) {
         return 0;
     } else {
@@ -947,7 +949,8 @@ static char kAssociatedObjectKey_KeyboardViewFrameObserver;
             return 0;
         }
         
-        CGRect visibleRect = CGRectIntersection(CGRectFlatted(keyboardWindow.bounds), CGRectFlatted(keyboardView.frame));
+        CGRect keyboardFrame = [keyboardWindow qmui_convertRect:keyboardView.bounds fromView:keyboardView];
+        CGRect visibleRect = CGRectIntersection(keyboardWindow.bounds, keyboardFrame);
         if (CGRectIsValidated(visibleRect)) {
             return CGRectGetHeight(visibleRect);
         }
