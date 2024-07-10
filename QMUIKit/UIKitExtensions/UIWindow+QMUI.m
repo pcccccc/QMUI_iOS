@@ -54,7 +54,7 @@ QMUISynthesizeBOOLProperty(qmui_capturesStatusBarAppearance, setQmui_capturesSta
     });
 }
 
-- (UIWindow *)qmui_keyWindow {
++ (UIWindow *)qmui_keyWindow {
     UIWindow *window;
     if (@available(iOS 13.0, *)) {
         if ([UIApplication sharedApplication].connectedScenes) {
