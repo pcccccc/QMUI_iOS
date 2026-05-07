@@ -231,6 +231,8 @@ QMUISynthesizeIdStrongProperty(qmui_specifiedTextColor, setQmui_specifiedTextCol
     }
     
     _QMUITransitionNavigationBar *customBar = [[_QMUITransitionNavigationBar alloc] init];
+    /// iOS 26不设置items时子视图不会添加
+    customBar.items = @[[[UINavigationItem alloc] initWithTitle:@""]];
     customBar.parentViewController = self;
     self.transitionNavigationBar = customBar;
     
@@ -401,8 +403,8 @@ QMUISynthesizeIdStrongProperty(qmui_specifiedTextColor, setQmui_specifiedTextCol
     // 导航栏title的颜色
     if ([vc respondsToSelector:@selector(qmui_titleViewTintColor)]) {
         UIColor *tintColor = [vc qmui_titleViewTintColor];
-        if ([vc.navigationItem.titleView isKindOfClass:QMUINavigationTitleView.class]) {
-            ((QMUINavigationTitleView *)vc.navigationItem.titleView).tintColor = tintColor;
+        if (vc.navigationItem.titleView.qmui_useAsNavigationTitleView) {
+            vc.navigationItem.titleView.tintColor = tintColor;
         } else if (!vc.navigationItem.titleView) {
             NSMutableDictionary<NSAttributedStringKey, id> *titleTextAttributes = (navigationController.navigationBar.titleTextAttributes ?: @{}).mutableCopy;
             titleTextAttributes[NSForegroundColorAttributeName] = tintColor;
@@ -412,8 +414,8 @@ QMUISynthesizeIdStrongProperty(qmui_specifiedTextColor, setQmui_specifiedTextCol
         }
     } else if (QMUICMIActivated) {
         UIColor *tintColor = NavBarTitleColor;
-        if ([vc.navigationItem.titleView isKindOfClass:QMUINavigationTitleView.class]) {
-            ((QMUINavigationTitleView *)vc.navigationItem.titleView).tintColor = tintColor;
+        if (vc.navigationItem.titleView.qmui_useAsNavigationTitleView) {
+            vc.navigationItem.titleView.tintColor = tintColor;
         } else if (!vc.navigationItem.titleView) {
             NSMutableDictionary<NSAttributedStringKey, id> *titleTextAttributes = (navigationController.navigationBar.titleTextAttributes ?: @{}).mutableCopy;
             titleTextAttributes[NSForegroundColorAttributeName] = tintColor;
@@ -469,6 +471,7 @@ QMUISynthesizeIdStrongProperty(qmui_specifiedTextColor, setQmui_specifiedTextCol
     return NO;
 }
 
+// 对于有一个界面隐藏了导航栏的情况，我们也要做自定义的动画去干预，因为如果左右两个界面导航栏样式不同，你不去干预的话，push/pop 瞬间导航栏会变成即将显示的那个界面的样式，这不符合预期
 - (BOOL)shouldCustomTransitionAutomaticallyForOperation:(UINavigationControllerOperation)operation firstViewController:(UIViewController *)viewController1 secondViewController:(UIViewController *)viewController2 {
     
     UIViewController<QMUINavigationControllerDelegate> *vc1 = (UIViewController<QMUINavigationControllerDelegate> *)viewController1;

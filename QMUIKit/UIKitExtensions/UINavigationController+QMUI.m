@@ -143,7 +143,13 @@ QMUISynthesizeIdStrongProperty(qmui_interactiveGestureDelegator, setQmui_interac
             }
         });
         
-        OverrideImplementation(NSClassFromString([NSString qmui_stringByConcat:@"_", @"UINavigationBar", @"ContentView", nil]), NSSelectorFromString(@"__backButtonAction:"), ^id(__unsafe_unretained Class originClass, SEL originCMD, IMP (^originalIMPProvider)(void)) {
+        NSString *barContentViewString;
+        if (QMUIHelper.isUsedLiquidGlass) {
+            barContentViewString = [NSString qmui_stringByConcat:@"UIKit.", @"NavigationBar", @"ContentView", nil];
+        } else {
+            barContentViewString = [NSString qmui_stringByConcat:@"_", @"UINavigationBar", @"ContentView", nil];
+        }
+        OverrideImplementation(NSClassFromString(barContentViewString), NSSelectorFromString(@"__backButtonAction:"), ^id(__unsafe_unretained Class originClass, SEL originCMD, IMP (^originalIMPProvider)(void)) {
             return ^(UIView *selfObject, id firstArgv) {
                 
                 if ([selfObject.superview isKindOfClass:UINavigationBar.class]) {
@@ -162,15 +168,30 @@ QMUISynthesizeIdStrongProperty(qmui_interactiveGestureDelegator, setQmui_interac
             };
         });
         
-        OverrideImplementation([UINavigationController class], NSSelectorFromString(@"navigationTransitionView:didEndTransition:fromView:toView:"), ^id(__unsafe_unretained Class originClass, SEL originCMD, IMP (^originalIMPProvider)(void)) {
-            return ^void(UINavigationController *selfObject, UIView *transitionView, NSInteger transition, UIView *fromView, UIView *toView) {
-                
-                BOOL (*originSelectorIMP)(id, SEL, UIView *, NSInteger , UIView *, UIView *);
-                originSelectorIMP = (BOOL (*)(id, SEL, UIView *, NSInteger , UIView *, UIView *))originalIMPProvider();
-                originSelectorIMP(selfObject, originCMD, transitionView, transition, fromView, toView);
-                selfObject.qmui_endedTransitionTopViewController = selfObject.topViewController;
-            };
-        });
+        if (@available(iOS 18.0, *)) {
+            OverrideImplementation([UINavigationController class], NSSelectorFromString([NSString qmui_stringByConcat:@"_", @"didEndTransition", @"FromView:", @"toView:", @"wasCustom:", nil]), ^id(__unsafe_unretained Class originClass, SEL originCMD, IMP (^originalIMPProvider)(void)) {
+                return ^(UINavigationController *selfObject, UIView *fromView, UIView *toView, BOOL wasCustom) {
+                    
+                    // call super
+                    void (*originSelectorIMP)(id, SEL, UIView *, UIView * , BOOL);
+                    originSelectorIMP = (void (*)(id, SEL, UIView *, UIView * , BOOL))originalIMPProvider();
+                    originSelectorIMP(selfObject, originCMD, fromView, toView, wasCustom);
+                    
+                    selfObject.qmui_endedTransitionTopViewController = selfObject.topViewController;
+                };
+            });
+        } else {
+            OverrideImplementation([UINavigationController class], NSSelectorFromString(@"navigationTransitionView:didEndTransition:fromView:toView:"), ^id(__unsafe_unretained Class originClass, SEL originCMD, IMP (^originalIMPProvider)(void)) {
+                return ^void(UINavigationController *selfObject, UIView *transitionView, NSInteger transition, UIView *fromView, UIView *toView) {
+                    
+                    BOOL (*originSelectorIMP)(id, SEL, UIView *, NSInteger , UIView *, UIView *);
+                    originSelectorIMP = (BOOL (*)(id, SEL, UIView *, NSInteger , UIView *, UIView *))originalIMPProvider();
+                    originSelectorIMP(selfObject, originCMD, transitionView, transition, fromView, toView);
+                    
+                    selfObject.qmui_endedTransitionTopViewController = selfObject.topViewController;
+                };
+            });
+        }
         
 #pragma mark - pushViewController:animated:
         OverrideImplementation([UINavigationController class], @selector(pushViewController:animated:), ^id(__unsafe_unretained Class originClass, SEL originCMD, IMP (^originalIMPProvider)(void)) {
@@ -197,7 +218,7 @@ QMUISynthesizeIdStrongProperty(qmui_interactiveGestureDelegator, setQmui_interac
                     originSelectorIMP(selfObject, originCMD, viewController, animated);
                 };
                 
-                BOOL willPushActually = viewController && ![viewController isKindOfClass:UITabBarController.class] && ![selfObject.viewControllers containsObject:viewController];
+                BOOL willPushActually = viewController && ![selfObject.viewControllers containsObject:viewController];
                 
                 if (!willPushActually) {
                     QMUIAssert(NO, @"UINavigationController (QMUI)", @"调用了 pushViewController 但实际上没 push 成功，viewController：%@", viewController);
@@ -245,7 +266,11 @@ QMUISynthesizeIdStrongProperty(qmui_interactiveGestureDelegator, setQmui_interac
                 
                 QMUINavigationAction action = selfObject.qmui_navigationAction;
                 if (action != QMUINavigationActionUnknow) {
-                    QMUILogWarn(@"UINavigationController (QMUI)", @"popViewController 时上一次的转场尚未完成，系统会忽略本次 pop，等上一次转场完成后再重新执行 pop, viewControllers = %@", selfObject.viewControllers);
+                    if (QMUIHelper.isUsedLiquidGlass) {
+                        // iOS 26液态玻璃下，转场动画可以被打断
+                    } else {
+                        QMUILogWarn(@"UINavigationController (QMUI)", @"popViewController 时上一次的转场尚未完成，系统会忽略本次 pop，等上一次转场完成后再重新执行 pop, viewControllers = %@", selfObject.viewControllers);
+                    }
                 }
                 BOOL willPopActually = selfObject.viewControllers.count > 1 && action == QMUINavigationActionUnknow;// 系统文档里说 rootViewController 是不能被 pop 的，当只剩下 rootViewController 时当前方法什么事都不会做
                 
@@ -321,7 +346,11 @@ QMUISynthesizeIdStrongProperty(qmui_interactiveGestureDelegator, setQmui_interac
                 
                 QMUINavigationAction action = selfObject.qmui_navigationAction;
                 if (action != QMUINavigationActionUnknow) {
-                    QMUILogWarn(@"UINavigationController (QMUI)", @"popToViewController 时上一次的转场尚未完成，系统会忽略本次 pop，等上一次转场完成后再重新执行 pop, currentViewControllers = %@, viewController = %@", selfObject.viewControllers, viewController);
+                    if (QMUIHelper.isUsedLiquidGlass) {
+                        // iOS 26液态玻璃下，转场动画可以被打断
+                    } else {
+                        QMUILogWarn(@"UINavigationController (QMUI)", @"popToViewController 时上一次的转场尚未完成，系统会忽略本次 pop，等上一次转场完成后再重新执行 pop, currentViewControllers = %@, viewController = %@", selfObject.viewControllers, viewController);
+                    }
                 }
                 BOOL willPopActually = selfObject.viewControllers.count > 1 && [selfObject.viewControllers containsObject:viewController] && selfObject.topViewController != viewController && action == QMUINavigationActionUnknow;// 系统文档里说 rootViewController 是不能被 pop 的，当只剩下 rootViewController 时当前方法什么事都不会做
                 
@@ -368,7 +397,11 @@ QMUISynthesizeIdStrongProperty(qmui_interactiveGestureDelegator, setQmui_interac
                 
                 QMUINavigationAction action = selfObject.qmui_navigationAction;
                 if (action != QMUINavigationActionUnknow) {
-                    QMUILogWarn(@"UINavigationController (QMUI)", @"popToRootViewController 时上一次的转场尚未完成，系统会忽略本次 pop，等上一次转场完成后再重新执行 pop, viewControllers = %@", selfObject.viewControllers);
+                    if (QMUIHelper.isUsedLiquidGlass) {
+                        // iOS 26液态玻璃下，转场动画可以被打断
+                    } else {
+                        QMUILogWarn(@"UINavigationController (QMUI)", @"popToRootViewController 时上一次的转场尚未完成，系统会忽略本次 pop，等上一次转场完成后再重新执行 pop, viewControllers = %@", selfObject.viewControllers);
+                    }
                 }
                 BOOL willPopActually = selfObject.viewControllers.count > 1 && action == QMUINavigationActionUnknow;
                 
@@ -488,7 +521,17 @@ static char kAssociatedObjectKey_navigationAction;
 }
 
 - (nullable UIViewController *)qmui_rootViewController {
-    return self.viewControllers.firstObject;
+    UIViewController *rootViewController = self.viewControllers.firstObject;
+    // 系统 UINavigationController 的 popToViewController、popToRootViewController、setViewControllers 三种 pop 的方式都有一个共同的特点，假如此时有3个及以上的 vc 例如 [A,B,C]，从当前界面 pop 到非相邻的界面，例如C到A，执行完 pop 操作后立马访问 UINavigationController.viewControllers 预期应该得到 [A]，实际上会得到 [C,A]，过一会（nav.view layoutIfNeeded 之后）才变成正确的 [A]。同理，[A,B,C,D]时从 D pop 到 B，预期得到[A,B]，实际得到[D,A,B]，也即这种情况它总是会把当前界面塞到 viewControllers 数组里的第一个，这就导致这期间访问基于 viewControllers 数组实现的功能（例如 qmui_rootViewController、qmui_previousViewController），都可能出错，所以这里对上述情况做特殊保护。
+    // 如果 pop 操作时只有2个vc，则没这种问题。
+    if (self.viewControllers.count > 1 && self.qmui_isPopping && self.transitionCoordinator) {
+        id<UIViewControllerTransitionCoordinator> transitionCoordinator = self.transitionCoordinator;
+        UIViewController *fromVc = [transitionCoordinator viewControllerForKey:UITransitionContextFromViewControllerKey];
+        if (rootViewController == fromVc) {
+            rootViewController = self.viewControllers[1];
+        }
+    }
+    return rootViewController;
 }
 
 - (void)qmui_pushViewController:(UIViewController *)viewController animated:(BOOL)animated completion:(void (^)(void))completion {
@@ -578,6 +621,7 @@ static char kAssociatedObjectKey_navigationAction;
                 && [self.parentViewController shouldForceEnableInteractivePopGestureRecognizer]) {
                 return YES;
             }
+            
             return originalValue;
         }
     }
